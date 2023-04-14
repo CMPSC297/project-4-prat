@@ -1,0 +1,35 @@
+{% extends "network/layout.html" %}
+{% block body %}
+    <h1>User: {{username}}</h1>
+    <p>followers: {{followers_count}}</p>
+    <p>following: {{following_count}}</p>
+    {% if posts %}
+    <ul>
+        {% for post in posts %}
+            <li>{{ post.content }} - {{ post.author.username }} posted at: {{post.created_at}} likes: {{post.likes}}
+                {%if post.author.username != user.username%}
+                    <form method="post" action="{% url 'like' post.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Like</button>
+                    </form>
+                    <form method="post" action="{% url 'dislike' post.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Dislike</button>
+                    </form>
+                        {% if post.author.username in following %}
+                            <p>You are already following {{ post.author.username }}!</p>
+                        {% else %}
+                            <form method="post" action="{% url 'follow' post.author.id %}">
+                            {% csrf_token %}
+                            <button type="submit">Follow</button>
+                            </form>
+                        {% endif %}
+                        
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No posts found.</p>
+    {% endif %}
+{% endblock %}

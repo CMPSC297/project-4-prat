@@ -1,0 +1,11 @@
+
+{% extends "network/layout.html" %}
+{% block body %}
+
+        <p>Click here to make a new post<p>
+        <form id="posts" method="post" action="{% url 'index' %}">
+            {% csrf_token %}
+            <input id="postText" type="text" name="postText">
+            <input id="submit" type="submit">
+        </form>
+{% endblock %}

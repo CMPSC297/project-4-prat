@@ -1,14 +1,64 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
-
-from .models import User
-
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import User, Post
 
 def index(request):
-    return render(request, "network/index.html")
+    if request.method == 'POST':
+        postText = request.POST.get('postText')
+        post = Post.objects.create(content=postText, author=request.user)
+        posts = Post.objects.all()
+        return render(request, 'network/index.html', {'posts': posts})
+    else:
+        posts = Post.objects.all()
+        return render(request, 'network/index.html', {'posts': posts})
+
+def profile(request, user_id):
+    #if request.method == 'POST':
+        user = User.objects.get(id=user_id)
+        posts = Post.objects.filter(author=user)
+        following_usernames = request.user.following.all().values_list('username', flat=True)
+        print(following_usernames)
+        return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames})
+    
+
+def follow(request, user_id):
+    #if request.method == 'POST':
+        user = User.objects.get(id=user_id)
+        user.followers.add(request.user)
+        posts = Post.objects.filter(author=user)        
+        user.followers_count += 1
+        user.save()
+        request.user.following_count += 1
+        request.user.save()
+        following_usernames = request.user.following.all().values_list('username', flat=True)
+        print(following_usernames)
+        return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames})
+
+
+def like_post(request, post_id):
+    if request.user.is_authenticated:
+        post = Post.objects.get(pk=post_id)
+        post.likes += 1
+        post.save()
+        messages.success(request, 'Post liked successfully.')
+        return redirect('index')
+    else:
+        messages.warning(request, 'Please login to like a post')
+        return redirect('login')
+
+
+@login_required
+def dislike_post(request, post_id):
+    post = Post.objects.get(pk=post_id)
+    post.dislikes -= 1
+    post.save()
+    messages.success(request, 'Post disliked successfully.')
+    return redirect('index')
 
 
 def login_view(request):
@@ -61,3 +111,11 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+def newPost(request):
+    return render(request, 'network/newPost.html')
+
+def following(request):
+    following_users = request.user.following.all()    
+    posts = Post.objects.filter(author__in=following_users)
+    return render(request, 'network/following.html', {'posts':posts})

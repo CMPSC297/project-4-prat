@@ -1,5 +1,22 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+    {% if posts %}
+        <ul>
+            {% for post in posts %}
+                <li>{{ post.content }} - <a href="{% url 'profile' post.author.id %}">{{ post.author.username }}</a> posted at: {{post.created_at}} likes: {{post.likes}}
+                    <form method="post" action="{% url 'like' post.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Like</button>
+                    </form>
+                    <form method="post" action="{% url 'dislike' post.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Dislike</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No posts found.</p>
+    {% endif %}
 {% endblock %}
