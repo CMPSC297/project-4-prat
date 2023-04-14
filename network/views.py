@@ -23,7 +23,7 @@ def profile(request, user_id):
         posts = Post.objects.filter(author=user)
         following_usernames = request.user.following.all().values_list('username', flat=True)
         print(following_usernames)
-        return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames})
+        return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames, 'author_id':user.id})
     
 
 def follow(request, user_id):
@@ -58,7 +58,7 @@ def follow(request, user_id):
         following_usernames = request.user.following.all().values_list('username', flat=True)
         print(following_usernames)'''
 
-    return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames})
+    return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames, 'author_id':user.id})
 
 
 def like_post(request, post_id):
