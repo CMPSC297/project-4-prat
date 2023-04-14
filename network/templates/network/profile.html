@@ -1,6 +1,7 @@
 {% extends "network/layout.html" %}
 {% block body %}
     <h1>User: {{username}}</h1>
+    
     <p>followers: {{followers_count}}</p>
     <p>following: {{following_count}}</p>
     {% if posts %}
@@ -18,6 +19,10 @@
                     </form>
                         {% if post.author.username in following %}
                             <p>You are already following {{ post.author.username }}!</p>
+                            <form method="post" action="{% url 'follow' post.author.id %}">
+                                {% csrf_token %}
+                                <button type="submit">Unfollow</button>
+                            </form>                            
                         {% else %}
                             <form method="post" action="{% url 'follow' post.author.id %}">
                             {% csrf_token %}

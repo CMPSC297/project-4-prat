@@ -28,7 +28,27 @@ def profile(request, user_id):
 
 def follow(request, user_id):
     #if request.method == 'POST':
-        user = User.objects.get(id=user_id)
+    user = User.objects.get(id=user_id)
+    #following_usernames = request.user.following.all().values_list('username', flat=True)
+
+    if request.user in user.followers.all():
+        # User is already following, so unfollow
+        user.followers.remove(request.user)
+        user.followers_count -= 1
+        request.user.following_count -= 1
+
+    else:
+        # User is not following, so follow
+        user.followers.add(request.user)
+        user.followers_count += 1
+        request.user.following_count += 1                                                    
+
+    user.save()
+    request.user.save()
+    following_usernames = request.user.following.all().values_list('username', flat=True)
+    posts = Post.objects.filter(author=user)
+
+    '''    user = User.objects.get(id=user_id)
         user.followers.add(request.user)
         posts = Post.objects.filter(author=user)        
         user.followers_count += 1
@@ -36,8 +56,9 @@ def follow(request, user_id):
         request.user.following_count += 1
         request.user.save()
         following_usernames = request.user.following.all().values_list('username', flat=True)
-        print(following_usernames)
-        return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames})
+        print(following_usernames)'''
+
+    return render(request, 'network/profile.html', {'posts':posts, 'username':user.username, 'followers_count':user.followers_count, 'following_count':user.following_count, 'following':following_usernames})
 
 
 def like_post(request, post_id):
