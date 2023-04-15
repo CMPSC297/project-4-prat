@@ -6,15 +6,35 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import User, Post
+from django.core.paginator import Paginator
 
 def index(request):
     if request.method == 'POST':
         postText = request.POST.get('postText')
-        post = Post.objects.create(content=postText, author=request.user)
-        posts = Post.objects.all()
+        form_type = request.POST.get('formType')
+        if request.POST.get('post'):
+            p_id = request.POST.get('post')
+            post = Post.objects.get(pk=p_id)
+            post.content = postText
+            post.save()
+        elif(request.POST.get('delete')):
+            p_id = request.POST.get('delete')
+            post = Post.objects.get(pk=p_id)
+            post.delete()
+        else:
+            post = Post.objects.create(content=postText, author=request.user)
+
+        post_list = Post.objects.all()
+        paginator = Paginator(post_list, 10)
+        page = request.GET.get('page')
+        posts = paginator.get_page(page)
         return render(request, 'network/index.html', {'posts': posts})
+
     else:
-        posts = Post.objects.all()
+        post_list = Post.objects.all()
+        paginator = Paginator(post_list, 10)
+        page = request.GET.get('page')
+        posts = paginator.get_page(page)
         return render(request, 'network/index.html', {'posts': posts})
 
 def profile(request, user_id):
@@ -133,7 +153,10 @@ def register(request):
     else:
         return render(request, "network/register.html")
 
-def newPost(request):
+def newPost(request, post_id=None):
+    if post_id:
+        post = Post.objects.get(pk=post_id)
+        return render(request, 'network/newPost.html', {'post':post})
     return render(request, 'network/newPost.html')
 
 def following(request):

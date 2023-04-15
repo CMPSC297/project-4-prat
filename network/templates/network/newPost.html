@@ -1,11 +1,21 @@
 
 {% extends "network/layout.html" %}
 {% block body %}
-
+        {% if post %}
+        <form id="posts" method="post" action="{% url 'index' %}">
+            {% csrf_token %}
+            <input id="postText" type="text" name="postText" value="{{post.content}}">
+            <input type="hidden" name="formType" value="edit">
+            <input type="hidden" name="post" value="{{post.id}}">
+            <input id="submit" type="submit">
+        </form>
+        {% else %}
         <p>Click here to make a new post<p>
         <form id="posts" method="post" action="{% url 'index' %}">
             {% csrf_token %}
             <input id="postText" type="text" name="postText">
+            <input type="hidden" name="formType" value="new">
             <input id="submit" type="submit">
         </form>
+        {% endif %}
 {% endblock %}

@@ -16,6 +16,18 @@
                 </li>
             {% endfor %}
         </ul>
+        {% if posts.has_previous or posts.has_next %}
+            <div class="pagination">
+                {% if posts.has_previous %}
+                    <a href="?page={{ posts.previous_page_number }}">Previous</a>
+                {% endif %}
+                <span class="current-page">Page {{ posts.number }} of {{ posts.paginator.num_pages }}</span>
+                {% if posts.has_next %}
+                    <a href="?page={{ posts.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+
     {% else %}
         <p>No posts found.</p>
     {% endif %}
