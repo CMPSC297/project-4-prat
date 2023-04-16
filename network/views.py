@@ -1,6 +1,9 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
@@ -86,12 +89,11 @@ def like_post(request, post_id):
         post = Post.objects.get(pk=post_id)
         post.likes += 1
         post.save()
-        messages.success(request, 'Post liked successfully.')
-        return redirect('index')
+        data = {'success': True, 'likes': post.likes}
+        return JsonResponse(data)
     else:
-        messages.warning(request, 'Please login to like a post')
-        return redirect('login')
-
+        data = {'success': False, 'message': 'Please login to like a post'}
+        return JsonResponse(data)
 
 @login_required
 def dislike_post(request, post_id):

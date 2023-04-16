@@ -4,15 +4,14 @@
     {% if posts %}
         <ul>
             {% for post in posts %}
-                <li>{{ post.content }} - <a href="{% url 'profile' post.author.id %}">{{ post.author.username }}</a> posted at: {{post.created_at}} likes: {{post.likes}}
-                    <form method="post" action="{% url 'like' post.id %}">
-                        {% csrf_token %}
-                        <button type="submit">Like</button>
-                    </form>
-                    <form method="post" action="{% url 'dislike' post.id %}">
-                        {% csrf_token %}
-                        <button type="submit">Dislike</button>
-                    </form>
+                <li>{{ post.content }} - <a href="{% url 'profile' post.author.id %}">{{ post.author.username }}</a> posted at: {{post.created_at}} 
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'like' post.id %}">
+                            {% csrf_token %}
+                            <button type="submit" data-post-id="{{ post.id }}">Like</button>
+                            <span class="like-count">Likes: {{ post.likes }}</span>
+                        </form>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -31,4 +30,41 @@
     {% else %}
         <p>No posts found.</p>
     {% endif %}
+
+    <script>
+        // Get all like buttons
+        var likeButtons = document.querySelectorAll('button[type="submit"]');
+
+        // Attach click event listener to each like button
+        likeButtons.forEach(function(button) {
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                var postId = button.getAttribute('data-post-id');
+
+                // Send a POST request to the server to increment the like count
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/like/' + postId + '/');
+                xhr.setRequestHeader('X-CSRFToken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            // Update the like count on the page
+                            var likeCountSpan = button.parentNode.querySelector('.like-count');
+                            likeCountSpan.textContent = 'Likes: ' + response.likes;
+                        } 
+                        else {
+                            console.log('Error: ' + response.message);
+                        }
+                    } 
+                    else {
+                        console.log('Error: ' + xhr.status);
+                    }
+                };
+                xhr.send();
+            });
+        });
+    </script>
+
 {% endblock %}
+
