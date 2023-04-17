@@ -8,8 +8,10 @@
                     {% if user.is_authenticated %}
                         <form method="post" action="{% url 'like' post.id %}">
                             {% csrf_token %}
-                            <button type="submit" data-post-id="{{ post.id }}">Like</button>
-                            <span class="like-count">Likes: {{ post.likes }}</span>
+                            <button type="submit" data-post-id="{{ post.id }}">
+                                {% if user in post.liked_by.all %}Dislike{% else %}Like{% endif %}
+                            </button>
+                            <span class="like-count">Likes: {{ post.liked_by.count }}</span>
                         </form>
                     {% endif %}
                 </li>
@@ -52,6 +54,12 @@
                             // Update the like count on the page
                             var likeCountSpan = button.parentNode.querySelector('.like-count');
                             likeCountSpan.textContent = 'Likes: ' + response.likes;
+                            if(response.liked){
+                                button.textContent = 'Dislike';
+                            }
+                            else{
+                                button.textContent = 'Like'
+                            }
                         } 
                         else {
                             console.log('Error: ' + response.message);

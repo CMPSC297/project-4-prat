@@ -85,15 +85,20 @@ def follow(request, user_id):
 
 
 def like_post(request, post_id):
-    if request.user.is_authenticated:
-        post = Post.objects.get(pk=post_id)
-        post.likes += 1
-        post.save()
-        data = {'success': True, 'likes': post.likes}
-        return JsonResponse(data)
-    else:
-        data = {'success': False, 'message': 'Please login to like a post'}
-        return JsonResponse(data)
+        if request.user.is_authenticated:
+            post = Post.objects.get(pk=post_id)
+            if post.liked_by.filter(id=request.user.id).exists():
+                # User has already liked the post, so remove their like
+                post.liked_by.remove(request.user)
+                data = {'success': True, 'liked': False, 'likes': post.liked_by.count()}
+            else:
+                # User has not liked the post yet, so add their like
+                post.liked_by.add(request.user)
+                data = {'success': True, 'liked': True, 'likes': post.liked_by.count()}
+            return JsonResponse(data)
+        else:
+            data = {'success': False, 'message': 'Please login to like a post'}
+            return JsonResponse(data)
 
 @login_required
 def dislike_post(request, post_id):
