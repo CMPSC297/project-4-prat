@@ -17,22 +17,27 @@
 {% endif %}
     <p>followers: {{followers_count}}</p>
     <p>following: {{following_count}}</p>
+
     {% if posts %}
     <ul>
         {% for post in posts %}
-            <li>{{ post.content }} - {{ post.author.username }} posted at: {{post.created_at}} likes: {{post.likes}}
-                
-                <form method="post" action="{% url 'editPost' post.id %}">
-                    {% csrf_token %}
-                    <button type="submit">Edit</button>
-                </form>    
-                
-                <form method="post" action="{% url 'index' %}">
-                    {% csrf_token %}
-                    <input type="hidden" name="delete" value="{{post.id}}">
-                    <button type="submit">Delete</button>
-                </form>
+            <li>
+                <div id="post-content-{{ post.id }}">
+                    {{ post.content }} - {{ post.author.username }} posted at: {{post.created_at}} likes: {{post.likes}}
+                </div>
 
+                {% if post.author.username == user.username %}
+                    <button class="edit-post-button" data-post-id="{{ post.id }}">Edit</button>
+                    <button class="delete-post-button" data-post-id="{{ post.id }}">Delete</button>
+
+                    <div class="edit-post-form-container" id="edit-post-form-container-{{ post.id }}" style="display: none">
+                        <form class="edit-post-form" method="post" action="{% url 'editPost' post.id %}">
+                            {% csrf_token %}
+                            <input class="edit-post-input" id="edit-post-input-{{ post.id }}" type="text" name="content" value="{{ post.content }}">
+                            <button type="submit">Save</button>
+                        </form>
+                    </div>
+                {% endif %}
             </li>
 
         {% endfor %}
@@ -40,4 +45,55 @@
     {% else %}
     <p>No posts found.</p>
     {% endif %}
-{% endblock %}
+    <script>
+        // get all edit post buttons and add event listener
+        const editButtons = document.querySelectorAll('.edit-post-button');
+        editButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            // get post id and content
+            const postId = button.getAttribute('data-post-id'); 
+            const postContent = document.getElementById(`post-content-${postId}`).textContent.trim();
+
+            // hide post content and show edit form
+            document.getElementById(`post-content-${postId}`).style.display = 'none';
+            document.getElementById(`edit-post-form-container-${postId}`).style.display = 'block';
+            const editPostInput = document.getElementById(`edit-post-input-${postId}`);
+            if (editPostInput) {
+            editPostInput.value = postContent;
+            }
+        });
+        });
+
+        // get all edit post forms and add event listener
+        const editForms = document.querySelectorAll('.edit-post-form');
+        editForms.forEach(form => {
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+
+            // get post id and content
+            const postId = form.getAttribute('action').split('/')[2]; 
+            const content = form.querySelector('.edit-post-input').value; 
+            console.log(content);
+            // send AJAX request to server
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/editPost/' + postId + '/');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('X-CSRFToken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            xhr.onload = () => {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                // update post content
+                document.getElementById(`post-content-${postId}`).textContent = response.content;
+                // hide edit form and show post content
+                document.getElementById(`edit-post-form-container-${postId}`).style.display = 'none';
+                document.getElementById(`post-content-${postId}`).style.display = 'block';
+            }
+            };
+            console.log(content)
+            var d = new FormData();
+            d.append('content', content); 
+            xhr.send(d)
+        });
+        });
+ </script>
+ {% endblock %}

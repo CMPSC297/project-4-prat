@@ -88,11 +88,9 @@ def like_post(request, post_id):
         if request.user.is_authenticated:
             post = Post.objects.get(pk=post_id)
             if post.liked_by.filter(id=request.user.id).exists():
-                # User has already liked the post, so remove their like
                 post.liked_by.remove(request.user)
                 data = {'success': True, 'liked': False, 'likes': post.liked_by.count()}
             else:
-                # User has not liked the post yet, so add their like
                 post.liked_by.add(request.user)
                 data = {'success': True, 'liked': True, 'likes': post.liked_by.count()}
             return JsonResponse(data)
@@ -112,12 +110,10 @@ def dislike_post(request, post_id):
 def login_view(request):
     if request.method == "POST":
 
-        # Attempt to sign user in
         username = request.POST["username"]
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
 
-        # Check if authentication successful
         if user is not None:
             login(request, user)
             return HttpResponseRedirect(reverse("index"))
@@ -170,3 +166,17 @@ def following(request):
     following_users = request.user.following.all()    
     posts = Post.objects.filter(author__in=following_users)
     return render(request, 'network/following.html', {'posts':posts})
+
+def editPost(request, post_id):
+    if request.method == 'POST':
+        cont = request.POST.get('content')
+        post = Post.objects.get(id=post_id)
+        print(cont)
+        if post.author != request.user:
+            return JsonResponse({'error': 'You do not have permission to edit this post.'})
+        post.content = cont
+        post.save()
+        print(post.cont)
+        return JsonResponse({'success': True, 'content': post.cont})
+    else:
+        return JsonResponse({'error': 'Invalid request method.'})
